@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { ArrowLeft, Play, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import FunctionLibrary from "@/components/FunctionLibrary";
 import PreviewCanvas from "@/components/PreviewCanvas";
 import WorkflowSteps from "@/components/WorkflowSteps";
@@ -17,6 +18,7 @@ const WorkflowBuilder = ({ workflow, onBack }: WorkflowBuilderProps) => {
     { id: 'output', type: 'output', name: 'Output' }
   ]);
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleAddFunction = (func: any) => {
     const newStep = {
@@ -31,10 +33,23 @@ const WorkflowBuilder = ({ workflow, onBack }: WorkflowBuilderProps) => {
     const newSteps = [...workflowSteps];
     newSteps.splice(outputIndex, 0, newStep);
     setWorkflowSteps(newSteps);
+
+    toast({
+      title: "Function Added",
+      description: `${func.name} has been added to your workflow.`,
+    });
   };
 
   const handleDeleteStep = (stepId: string) => {
+    const stepToDelete = workflowSteps.find(step => step.id === stepId);
     setWorkflowSteps(steps => steps.filter(step => step.id !== stepId));
+    
+    if (stepToDelete) {
+      toast({
+        title: "Step Removed",
+        description: `${stepToDelete.name} has been removed from your workflow.`,
+      });
+    }
   };
 
   const handleReorderSteps = (dragIndex: number, hoverIndex: number) => {
@@ -43,6 +58,30 @@ const WorkflowBuilder = ({ workflow, onBack }: WorkflowBuilderProps) => {
     newSteps.splice(dragIndex, 1);
     newSteps.splice(hoverIndex, 0, dragStep);
     setWorkflowSteps(newSteps);
+  };
+
+  const handleRunBatch = () => {
+    const functionSteps = workflowSteps.filter(step => step.type === 'function');
+    if (functionSteps.length === 0) {
+      toast({
+        title: "No Functions",
+        description: "Please add at least one function to your workflow before running.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Batch Process Started",
+      description: `Processing workflow with ${functionSteps.length} functions...`,
+    });
+  };
+
+  const handleSettings = () => {
+    toast({
+      title: "Settings",
+      description: "Workflow settings panel will open here.",
+    });
   };
 
   return (
@@ -60,11 +99,18 @@ const WorkflowBuilder = ({ workflow, onBack }: WorkflowBuilderProps) => {
           </h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200">
+          <Button 
+            onClick={handleRunBatch}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200"
+          >
             <Play className="w-4 h-4 mr-2" />
             Run Batch Process
           </Button>
-          <Button variant="outline" className="border-gray-300">
+          <Button 
+            onClick={handleSettings}
+            variant="outline" 
+            className="border-gray-300"
+          >
             <Settings className="w-4 h-4 mr-2" />
             Settings
           </Button>
@@ -74,7 +120,7 @@ const WorkflowBuilder = ({ workflow, onBack }: WorkflowBuilderProps) => {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Function Library */}
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+        <div className="w-72 bg-white border-r border-gray-200 flex flex-col">
           <FunctionLibrary onAddFunction={handleAddFunction} />
         </div>
 
@@ -87,7 +133,7 @@ const WorkflowBuilder = ({ workflow, onBack }: WorkflowBuilderProps) => {
         </div>
 
         {/* Right Panel - Workflow Steps */}
-        <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+        <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
           <WorkflowSteps 
             steps={workflowSteps}
             onDeleteStep={handleDeleteStep}

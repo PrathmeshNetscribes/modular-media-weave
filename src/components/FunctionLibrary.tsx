@@ -1,9 +1,10 @@
 
 import { useState } from "react";
-import { Search, User, Image as ImageIcon, Wand2, Scissors, Palette, Zap } from "lucide-react";
+import { Search, User, Image as ImageIcon, Wand2, Scissors, Palette, Zap, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface FunctionLibraryProps {
   onAddFunction: (func: any) => void;
@@ -39,7 +40,21 @@ const FunctionLibrary = ({ onAddFunction }: FunctionLibraryProps) => {
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Available Functions</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Available Functions</h2>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-6 h-6 p-0 hover:bg-gray-100 rounded-full">
+                  <Info className="w-4 h-4 text-gray-500" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <p className="text-sm">Browse and select AI functions to add to your workflow. Functions will be executed in the order you add them.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         
         {/* Search */}
         <div className="relative mb-4">
@@ -78,7 +93,7 @@ const FunctionLibrary = ({ onAddFunction }: FunctionLibraryProps) => {
           {filteredFunctions.map(func => (
             <div
               key={func.id}
-              className="group p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 cursor-pointer bg-white hover:bg-blue-50"
+              className="group p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 cursor-pointer bg-white hover:bg-blue-50 animate-fade-in hover-scale"
               onClick={() => onAddFunction(func)}
             >
               <div className="flex items-start gap-3">

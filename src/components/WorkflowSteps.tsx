@@ -1,9 +1,11 @@
 
 import { useState } from "react";
-import { GripVertical, Edit, Trash2, Upload, Download, Play } from "lucide-react";
+import { GripVertical, Edit, Trash2, Upload, Download, Play, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface WorkflowStepsProps {
   steps: any[];
@@ -15,6 +17,7 @@ interface WorkflowStepsProps {
 
 const WorkflowSteps = ({ steps, onDeleteStep, onReorderSteps, onSelectStep, selectedStep }: WorkflowStepsProps) => {
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
+  const { toast } = useToast();
 
   const handleDragStart = (index: number) => {
     setDraggedItem(index);
@@ -54,12 +57,46 @@ const WorkflowSteps = ({ steps, onDeleteStep, onReorderSteps, onSelectStep, sele
     }
   };
 
+  const handleRunWorkflow = () => {
+    const functionSteps = steps.filter(step => step.type === 'function');
+    if (functionSteps.length === 0) {
+      toast({
+        title: "No Functions",
+        description: "Please add functions to your workflow before running.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Workflow Started",
+      description: `Running workflow with ${functionSteps.length} steps...`,
+    });
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Steps</h2>
-          <Button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-gray-900">Workflow Steps</h2>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-6 h-6 p-0 hover:bg-gray-100 rounded-full">
+                    <Info className="w-4 h-4 text-gray-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="text-sm">Drag to reorder steps. Click to select and view details. Your workflow will process images through these steps in order.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <Button 
+            onClick={handleRunWorkflow}
+            className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
+          >
             <Play className="w-4 h-4 mr-2" />
             Run
           </Button>
@@ -71,7 +108,7 @@ const WorkflowSteps = ({ steps, onDeleteStep, onReorderSteps, onSelectStep, sele
           {steps.map((step, index) => (
             <Card
               key={step.id}
-              className={`group transition-all duration-200 cursor-pointer border ${
+              className={`relative group transition-all duration-200 cursor-pointer border animate-fade-in hover-scale ${
                 selectedStep === step.id 
                   ? 'border-blue-500 shadow-md bg-blue-50' 
                   : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
