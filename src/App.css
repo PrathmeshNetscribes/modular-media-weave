@@ -40,3 +40,17 @@
 .read-the-docs {
   color: #888;
 }
+
+.noscroll {
+  overflow: auto; /* or scroll, as needed */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.noscroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.noscroll::-webkit-scrollbar {
+  display: none;
+} 

@@ -1,11 +1,11 @@
 
-import { useState } from "react";
-import { ArrowLeft, Play, Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import FunctionLibrary from "@/components/FunctionLibrary";
 import PreviewCanvas from "@/components/PreviewCanvas";
+import { Button } from "@/components/ui/button";
 import WorkflowSteps from "@/components/WorkflowSteps";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Play, Settings } from "lucide-react";
+import { useState } from "react";
 
 interface WorkflowBuilderProps {
   workflow?: any;
@@ -53,11 +53,24 @@ const WorkflowBuilder = ({ workflow, onBack }: WorkflowBuilderProps) => {
   };
 
   const handleReorderSteps = (dragIndex: number, hoverIndex: number) => {
-    const dragStep = workflowSteps[dragIndex];
-    const newSteps = [...workflowSteps];
-    newSteps.splice(dragIndex, 1);
-    newSteps.splice(hoverIndex, 0, dragStep);
-    setWorkflowSteps(newSteps);
+    // const dragStep = workflowSteps[dragIndex];
+    // const newSteps = [...workflowSteps];
+    // newSteps.splice(dragIndex, 1);
+    // newSteps.splice(hoverIndex, 0, dragStep);
+    const functionSteps = workflowSteps.filter((step) => step.type === "function");
+
+    const draggedStepId = functionSteps[dragIndex]?.id;
+    const hoveredStepId = functionSteps[hoverIndex]?.id;
+
+    const fromIndex = workflowSteps.findIndex((s) => s.id === draggedStepId);
+    const toIndex = workflowSteps.findIndex((s) => s.id === hoveredStepId);
+
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const updatedSteps = [...workflowSteps];
+    const [moved] = updatedSteps.splice(fromIndex, 1);
+    updatedSteps.splice(toIndex, 0, moved);
+    setWorkflowSteps(updatedSteps);
   };
 
   const handleRunBatch = () => {
@@ -87,7 +100,7 @@ const WorkflowBuilder = ({ workflow, onBack }: WorkflowBuilderProps) => {
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={onBack} className="hover:bg-gray-100">
             <ArrowLeft className="w-5 h-5 mr-2" />
@@ -120,7 +133,7 @@ const WorkflowBuilder = ({ workflow, onBack }: WorkflowBuilderProps) => {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Function Library */}
-        <div className="w-72 bg-white border-r border-gray-200 flex flex-col">
+        <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
           <FunctionLibrary onAddFunction={handleAddFunction} />
         </div>
 
@@ -133,7 +146,7 @@ const WorkflowBuilder = ({ workflow, onBack }: WorkflowBuilderProps) => {
         </div>
 
         {/* Right Panel - Workflow Steps */}
-        <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
+        <div className="w-60 bg-white border-l border-gray-200 flex flex-col">
           <WorkflowSteps 
             steps={workflowSteps}
             onDeleteStep={handleDeleteStep}

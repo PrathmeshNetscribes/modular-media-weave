@@ -1,11 +1,9 @@
+/** @format */
 
-import { useState } from "react";
-import { GripVertical, Edit, Trash2, Upload, Download, Play, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Play } from "lucide-react";
+import InputOutput from "./InputOutput";
 
 interface WorkflowStepsProps {
   steps: any[];
@@ -15,55 +13,22 @@ interface WorkflowStepsProps {
   selectedStep: string | null;
 }
 
-const WorkflowSteps = ({ steps, onDeleteStep, onReorderSteps, onSelectStep, selectedStep }: WorkflowStepsProps) => {
-  const [draggedItem, setDraggedItem] = useState<number | null>(null);
+const WorkflowSteps = ({
+  steps,
+  onDeleteStep,
+  onReorderSteps,
+  onSelectStep,
+  selectedStep,
+}: WorkflowStepsProps) => {
   const { toast } = useToast();
 
-  const handleDragStart = (index: number) => {
-    setDraggedItem(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedItem !== null && draggedItem !== index) {
-      onReorderSteps(draggedItem, index);
-      setDraggedItem(index);
-    }
-  };
-
-  const handleDragEnd = () => {
-    setDraggedItem(null);
-  };
-
-  const getStepIcon = (step: any) => {
-    switch (step.type) {
-      case 'input':
-        return <Upload className="w-4 h-4 text-green-600" />;
-      case 'output':
-        return <Download className="w-4 h-4 text-blue-600" />;
-      default:
-        return <Play className="w-4 h-4 text-purple-600" />;
-    }
-  };
-
-  const getStepBadgeColor = (step: any) => {
-    switch (step.type) {
-      case 'input':
-        return 'bg-green-100 text-green-800';
-      case 'output':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-purple-100 text-purple-800';
-    }
-  };
-
   const handleRunWorkflow = () => {
-    const functionSteps = steps.filter(step => step.type === 'function');
+    const functionSteps = steps.filter((step) => step.type === "function");
     if (functionSteps.length === 0) {
       toast({
         title: "No Functions",
         description: "Please add functions to your workflow before running.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -74,26 +39,32 @@ const WorkflowSteps = ({ steps, onDeleteStep, onReorderSteps, onSelectStep, sele
     });
   };
 
+  const handleReorderFunctionSteps = (dragIndex: number, hoverIndex: number) => {
+    const functionSteps = steps.filter((step) => step.type === "function");
+
+    const draggedStepId = functionSteps[dragIndex]?.id;
+    const hoveredStepId = functionSteps[hoverIndex]?.id;
+
+    const fromIndex = steps.findIndex((s) => s.id === draggedStepId);
+    const toIndex = steps.findIndex((s) => s.id === hoveredStepId);
+
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const updatedSteps = [...steps];
+    const [moved] = updatedSteps.splice(fromIndex, 1);
+    updatedSteps.splice(toIndex, 0, moved);
+
+    // onReorderSteps(updatedSteps);
+  };
+
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-4">
+      <div className="p-2 border-b border-gray-200">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold text-gray-900">Workflow Steps</h2>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-6 h-6 p-0 hover:bg-gray-100 rounded-full">
-                    <Info className="w-4 h-4 text-gray-500" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="text-sm">Drag to reorder steps. Click to select and view details. Your workflow will process images through these steps in order.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
-          <Button 
+          <Button
             onClick={handleRunWorkflow}
             className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
           >
@@ -105,104 +76,37 @@ const WorkflowSteps = ({ steps, onDeleteStep, onReorderSteps, onSelectStep, sele
 
       <div className="flex-1 overflow-y-auto p-3">
         <div className="space-y-3">
-          {steps.map((step, index) => (
-            <Card
-              key={step.id}
-              className={`relative group transition-all duration-200 cursor-pointer border animate-fade-in hover-scale ${
-                selectedStep === step.id 
-                  ? 'border-blue-500 shadow-md bg-blue-50' 
-                  : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
-              } ${draggedItem === index ? 'opacity-50' : ''}`}
-              draggable={step.type !== 'input' && step.type !== 'output'}
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragEnd={handleDragEnd}
-              onClick={() => onSelectStep(step.id)}
-            >
-              <CardContent className="p-3">
-                <div className="flex items-center gap-3">
-                  {/* Drag Handle */}
-                  {step.type !== 'input' && step.type !== 'output' && (
-                    <div className="opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity">
-                      <GripVertical className="w-4 h-4 text-gray-400" />
-                    </div>
-                  )}
+          <InputOutput
+            steps={steps.filter((step) => step.type === "input")}
+            onDeleteStep={onDeleteStep}
+            onReorderSteps={onReorderSteps}
+            onSelectStep={onSelectStep}
+            selectedStep={selectedStep}
+          />
 
-                  {/* Step Icon */}
-                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                    {getStepIcon(step)}
-                  </div>
+          {steps.some((step) => step.type === "function") ? (
+            <InputOutput
+              steps={steps.filter((step) => step.type === "function")}
+              onDeleteStep={onDeleteStep}
+              onReorderSteps={onReorderSteps}
+              onSelectStep={onSelectStep}
+              selectedStep={selectedStep}
+              // isFunction={true}
+            />
+          ) : (
+            <div className="flex items-center justify-center border-dashed border-gray-300 border-2 rounded-md p-4">
+              <div className="h-6 w-6 border-dashed border-gray-300 border-2 rounded-full mr-3" />
+              <span className="text-gray-600">Drag functions here</span>
+            </div>
+          )}
 
-                  {/* Step Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-sm text-gray-900 truncate">{step.name}</h3>
-                      <Badge className={`text-xs px-2 py-0.5 ${getStepBadgeColor(step)}`}>
-                        {step.type}
-                      </Badge>
-                    </div>
-                    
-                    {step.type === 'input' && step.thumbnail && (
-                      <div className="mt-2">
-                        <img 
-                          src={step.thumbnail} 
-                          alt="Input"
-                          className="w-full h-20 object-cover rounded border"
-                        />
-                      </div>
-                    )}
-                    
-                    {step.function && (
-                      <p className="text-xs text-gray-500 truncate">{step.function.description}</p>
-                    )}
-                  </div>
-
-                  {/* Step Actions */}
-                  {step.type !== 'input' && step.type !== 'output' && (
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="w-7 h-7 p-0 hover:bg-blue-100"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Handle edit
-                        }}
-                      >
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="w-7 h-7 p-0 hover:bg-red-100 text-red-600"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteStep(step.id);
-                        }}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Step Number Indicator */}
-                <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
-                  {index + 1}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Output Settings */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        <h3 className="text-sm font-medium text-gray-900 mb-2">Output Settings</h3>
-        <div className="text-xs text-gray-600 space-y-1">
-          <div>Format: PNG</div>
-          <div>Quality: High</div>
-          <div>Resolution: 1024x1024</div>
+          <InputOutput
+            steps={steps.filter((step) => step.type === "output")}
+            onDeleteStep={onDeleteStep}
+            onReorderSteps={onReorderSteps}
+            onSelectStep={onSelectStep}
+            selectedStep={selectedStep}
+          />
         </div>
       </div>
     </div>
